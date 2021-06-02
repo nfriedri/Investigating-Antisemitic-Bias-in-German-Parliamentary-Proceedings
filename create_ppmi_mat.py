@@ -4,33 +4,37 @@ import os
 import codecs
 from scipy import sparse
 from text_preprocessing import remove_umlauts
-from bias_specifications import antisemitic_streams
 import argparse
 import logging
 import json
 import itertools
-from utils import create_attribute_sets, create_target_sets, convert_attribute_set, CreateCorpus
+from utils import create_attribute_sets, create_target_sets, CreateCorpus
 from nltk.corpus import stopwords
+
+import environment as env
+
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
+
 
 def get_unigrams(corpus, min_count=10, filter_stopwords=False):
     if filter_stopwords:
-      german_stop_words = stopwords.words('german')
-      german_stop_words = remove_umlauts(german_stop_words)
-      german_stop_words.append('0')
+        german_stop_words = stopwords.words('german')
+        german_stop_words = remove_umlauts(german_stop_words)
+        german_stop_words.append('0')
 
     unigram_counts = Counter()
     logging.info(f'Get unigrams')
     for ii, sent in enumerate(corpus):
         if ii % 200000 == 0:
-            logging.info(f'finished {ii/len(corpus):.2%} of corpus')
+            logging.info(f'finished {ii / len(corpus):.2%} of corpus')
         for token in sent:
-          if filter_stopwords and token not in german_stop_words:
-              unigram_counts[token] += 1
-          else:
-              unigram_counts[token] += 1
-    unigram_counts = {k:v for k,v in unigram_counts.items() if v >= min_count}                
+            if filter_stopwords and token not in german_stop_words:
+                unigram_counts[token] += 1
+            else:
+                unigram_counts[token] += 1
+    unigram_counts = {k: v for k, v in unigram_counts.items() if v >= min_count}
     return unigram_counts
+
 
 def create_index(unigram_counts, kind, full=False, top_attribute='sentiment'):
     """Create tok2word and word2tok indices
@@ -49,22 +53,23 @@ def create_index(unigram_counts, kind, full=False, top_attribute='sentiment'):
     j = len(top_words)
 
     if full:
-      for tok in unigram_counts.keys():
-          if tok not in top_words:
-            tok2indx[tok] = j
-            j += 1
+        for tok in unigram_counts.keys():
+            if tok not in top_words:
+                tok2indx[tok] = j
+                j += 1
     else:
-      # Only create index including attribute and target sets
-      atts = list(dict.fromkeys(list(itertools.chain.from_iterable(attributes.values()))))
-      targets = list(dict.fromkeys(list(itertools.chain.from_iterable(targets.values()))))
-      matrix_terms = atts + targets
-      for tok in matrix_terms:
-          if tok not in top_words:
-              tok2indx[tok] = j
-              j += 1
-    indx2tok = {indx: tok for tok,indx in tok2indx.items()}
+        # Only create index including attribute and target sets
+        atts = list(dict.fromkeys(list(itertools.chain.from_iterable(attributes.values()))))
+        targets = list(dict.fromkeys(list(itertools.chain.from_iterable(targets.values()))))
+        matrix_terms = atts + targets
+        for tok in matrix_terms:
+            if tok not in top_words:
+                tok2indx[tok] = j
+                j += 1
+    indx2tok = {indx: tok for tok, indx in tok2indx.items()}
     logging.info(f'vocabulary size: {len(tok2indx)}')
     return tok2indx, indx2tok
+
 
 def get_coo_counts(corpus: list, tok2indx: dict, window_size=2):
     """Retrieve co-occurence counts
@@ -86,17 +91,18 @@ def get_coo_counts(corpus: list, tok2indx: dict, window_size=2):
             ii_context_min = max(0, ii_word - back_window)
             ii_context_max = min(len(tokens) - 1, ii_word + front_window)
             ii_contexts = [
-                ii for ii in range(ii_context_min, ii_context_max + 1) 
+                ii for ii in range(ii_context_min, ii_context_max + 1)
                 if ii != ii_word]
             for ii_context in ii_contexts:
                 skipgram = (tokens[ii_word], tokens[ii_context])
-                coo_counts[skipgram] += 1    
+                coo_counts[skipgram] += 1
         if ix % 200000 == 0:
-            logging.info(f'finished {ix/len(corpus):.2%} of corpus')
+            logging.info(f'finished {ix / len(corpus):.2%} of corpus')
 
     logging.info('done')
     logging.info(f'number of co-occurring word pairs: {len(coo_counts)}')
     return coo_counts
+
 
 def create_coo_mat(coo_counts: dict):
     """Create co-occurrence matrix
@@ -112,13 +118,14 @@ def create_coo_mat(coo_counts: dict):
     for (tok1, tok2), sg_count in coo_counts.items():
         ii += 1
         if ii % 200000 == 0:
-            logging.info(f'finished {ii/len(coo_counts):.2%} of skipgrams')    
+            logging.info(f'finished {ii / len(coo_counts):.2%} of skipgrams')
         row_indxs.append(tok1)
         col_indxs.append(tok2)
         values.append(sg_count)
     logging.info('done')
     wwcnt_mat = sparse.csr_matrix((values, (row_indxs, col_indxs)))
     return wwcnt_mat
+
 
 def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
     """Create PMMI matrix
@@ -132,16 +139,15 @@ def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
 
     # Sanity check
     num_skipgrams = coo_mat.sum()
-    assert(sum(coo_counts.values())==num_skipgrams)
+    assert (sum(coo_counts.values()) == num_skipgrams)
 
     prob_norm = coo_mat.sum() + (coo_mat.shape[0] * coo_mat.shape[1]) * smooth
 
-    # For creating sparce matrices
+    # For creating sparce ppmi_matrices
     row_indxs = []
     col_indxs = []
-    ppmi_values = []   # positive pointwise mutial information
+    ppmi_values = []  # positive pointwise mutial information
     sppmi_values = []  # smoothed positive pointwise mutual information
-
 
     sum_over_words = np.array(coo_mat.sum(axis=0)).flatten() + smooth
     sum_over_contexts = np.array(coo_mat.sum(axis=1)).flatten() + smooth
@@ -151,7 +157,7 @@ def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
 
     # context-distribution smoothing acc. to Levy et al. (2014)
     alpha = 0.75
-    sum_over_words_alpha = sum_over_words**alpha
+    sum_over_words_alpha = sum_over_words ** alpha
     nca_denom = np.sum(sum_over_words_alpha)
 
     ii = 0
@@ -159,7 +165,7 @@ def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
     for (tok_word, tok_context), sg_count in coo_counts.items():
         ii += 1
         if ii % 200000 == 0:
-            logging.info(f'finished {ii/len(coo_counts):.2%} of skipgrams')
+            logging.info(f'finished {ii / len(coo_counts):.2%} of skipgrams')
 
         nwc = sg_count + smooth
         Pwc = nwc / prob_norm
@@ -171,9 +177,9 @@ def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
         nca = sum_over_words_alpha[tok_context]
         Pca = nca / nca_denom
 
-        pmi = np.log(Pwc/(Pw*Pc)) - neg   
+        pmi = np.log(Pwc / (Pw * Pc)) - neg
         ppmi = max(pmi, 0)
-        spmi = np.log(Pwc/(Pw*Pca))
+        spmi = np.log(Pwc / (Pw * Pca))
         sppmi = max(spmi, 0)
 
         row_indxs.append(tok_word)
@@ -181,50 +187,66 @@ def create_ppmi_mat(coo_mat, coo_counts, smooth=0, neg=1, normalize=False):
         ppmi_values.append(ppmi)
         sppmi_values.append(sppmi)
 
-    logging.info('done')	
+    logging.info('done')
     ppmi_mat = sparse.csr_matrix((ppmi_values, (row_indxs, col_indxs)))
-    sppmi_mat = sparse.csr_matrix((sppmi_values, (row_indxs, col_indxs)))    
+    sppmi_mat = sparse.csr_matrix((sppmi_values, (row_indxs, col_indxs)))
     return ppmi_mat, sppmi_mat
 
+
 def main():
-  parser = argparse.ArgumentParser(description="Compute PPMI matrix")
-  parser.add_argument("--protocols", type=str, help="Path to protocols", required=True)
-  parser.add_argument("--protocol_type", nargs='?', choices = ['RT', 'BRD'], help="Whether to run test for Reichstagsprotokolle (RT) or Bundestagsprotokolle (BRD)",
- required=True)
-  # parser.add_argument("--top_attribute", type=str, help='Which attribute set to be used for subsequent label propagation - either sentiment, patriotism, economic or conspiratorial')
-  parser.add_argument("--min_count", type=int, help="Minimum number of occurences of a word to be included in PPMI matrix", required=True)
-  parser.add_argument("--full", action='store_true', help="Compute full PPMI matrix - in default mode only PPMI mat containing target and attribute sets of all bias specifications is computed")
-  parser.add_argument("--window_size", type=int, help="Window size to use for creating CO and PPMI matrices", required=True)
-  parser.add_argument("--normalize", action='store_true', help="Whether to normalize PPMI matrix")
-  parser.add_argument("--smooth", type=int, help="Smoothing parameter for add-k smoothing", default=0)
-  parser.add_argument("--neg", type=int, help="Number of negative samples to use for computing shifted PPMI", default=1)
-  parser.add_argument("--output_file", type=str, help='Output file to store matrix')
+    parser = argparse.ArgumentParser(description="Compute PPMI matrix")
+    parser.add_argument("--protocols", type=str, help="Path to protocols", required=True)
+    parser.add_argument("--protocol_type", nargs='?', choices=['RT', 'BRD'],
+                        help="Whether to run test for Reichstagsprotokolle (RT) or Bundestagsprotokolle (BRD)",
+                        required=True)
+    # parser.add_argument("--top_attribute", type=str, help='Which attribute set to be used for subsequent label propagation - either sentiment, patriotism, economic or conspiratorial')
+    parser.add_argument("--min_count", type=int,
+                        help="Minimum number of occurences of a word to be included in PPMI matrix", required=True)
+    parser.add_argument("--full", action='store_true',
+                        help="Compute full PPMI matrix - in default mode only PPMI mat containing target and attribute sets of all bias specifications is computed")
+    parser.add_argument("--window_size", type=int, help="Window size to use for creating CO and PPMI ppmi_matrices",
+                        required=True)
+    parser.add_argument("--normalize", action='store_true', help="Whether to normalize PPMI matrix")
+    parser.add_argument("--smooth", type=int, help="Smoothing parameter for add-k smoothing", default=0)
+    parser.add_argument("--neg", type=int, help="Number of negative samples to use for computing shifted PPMI",
+                        default=1)
+    parser.add_argument("--output_file", type=str, help='Output file to store matrix')
+    parser.add_argument("--area", nargs="?", choices=["antisem", "anticom"])
 
-  args = parser.parse_args()
-  sentences = list(CreateCorpus(args.protocols))
-  unigrams = get_unigrams(sentences, min_count=args.min_count)
-  
-  if args.full:
-    tok2indx, indx2tok = create_index(unigrams, kind= args.protocol_type, full=args.full)
-  else:
-    tok2indx, indx2tok = create_index(unigrams, kind= args.protocol_type)
-  skipgrams = get_coo_counts(sentences, tok2indx, args.window_size)
-  coo_mat = create_coo_mat(skipgrams)
+    args = parser.parse_args()
+    if args.area is not None:
+        env.set_area(args.area)
+    logging.info(f'Started creating PPMI Matrix for:  {args.protocols}')
 
-  ppmi_mat, sppmi_mat = create_ppmi_mat(coo_mat, skipgrams,args.smooth, args.neg, args.normalize)
-  # Save matrices
-  if not os.path.exists('matrices'):
-    os.makedirs('matrices')
-    
-  sparse.save_npz(f'matrices/ppmi_{args.output_file}.npz', ppmi_mat, compressed=True)
-  sparse.save_npz(f'matrices/sppmi_{args.output_file}.npz', sppmi_mat, compressed=True)
+    sentences = list(CreateCorpus(args.protocols))
+    unigrams = get_unigrams(sentences, min_count=args.min_count)
 
-  # Save tok2indx dictionaries
-  if not os.path.exists('ppmi_vocab'):
-    os.makedirs('ppmi_vocab')
-  with codecs.open(f'ppmi_vocab/{args.output_file}.json',"w", encoding='utf-8') as f:
-      f.write(json.dumps(tok2indx))
+    if args.full:
+        tok2indx, indx2tok = create_index(unigrams, kind=args.protocol_type, full=args.full)
+    else:
+        tok2indx, indx2tok = create_index(unigrams, kind=args.protocol_type)
+    skipgrams = get_coo_counts(sentences, tok2indx, args.window_size)
+    coo_mat = create_coo_mat(skipgrams)
+
+    ppmi_mat, sppmi_mat = create_ppmi_mat(coo_mat, skipgrams, args.smooth, args.neg, args.normalize)
+    # Save ppmi_matrices
+
+    if env.AREA == "antisem":
+        if not os.path.exists(env.PPMI_ANTISEM_DIR):
+            os.makedirs(env.PPMI_ANTISEM_DIR)
+        sparse.save_npz(f'{env.PPMI_ANTISEM_DIR}/ppmi_{args.output_file}.npz', ppmi_mat, compressed=True)
+        sparse.save_npz(f'{env.PPMI_ANTISEM_DIR}/sppmi_{args.output_file}.npz', sppmi_mat, compressed=True)
+        with codecs.open(f'{env.PPMI_ANTISEM_DIR}/{args.output_file}.json', "w", encoding='utf-8') as f:
+            f.write(json.dumps(tok2indx))
+    if env.AREA == "anticom":
+        if not os.path.exists(env.PPMI_ANTICOM_DIR):
+            os.makedirs(env.PPMI_ANTISEM_DIR)
+        sparse.save_npz(f'{env.PPMI_ANTICOM_DIR}/ppmi_{args.output_file}.npz', ppmi_mat, compressed=True)
+        sparse.save_npz(f'{env.PPMI_ANTICOM_DIR}/sppmi_{args.output_file}.npz', sppmi_mat, compressed=True)
+        with codecs.open(f'{env.PPMI_ANTICOM_DIR}/{args.output_file}.json', "w", encoding='utf-8') as f:
+            f.write(json.dumps(tok2indx))
+
 
 
 if __name__ == "__main__":
-  main()
+    main()

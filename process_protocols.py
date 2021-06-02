@@ -4,18 +4,18 @@ import os
 from gensim.utils import save_as_line_sentence
 from text_preprocessing import *
 import logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
+from environment import DATA_DIR
 
-ROOT_DIR = os.path.dirname(os.path.realpath(__file__))
+logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
 lemmatizer = GermanLemmatizer()
 logging.info('Lemmatizer loaded.')
-spelling_dict = codecs.open(os.path.join(ROOT_DIR, 'dictionaries/harmonize_dict.txt'), 'r')
-spelling_dict = {line.split()[0] : line.split()[1] for line in spelling_dict}
+spelling_dict = codecs.open(os.path.join(DATA_DIR, 'dictionaries/harmonize_dict.txt'), 'r')
+spelling_dict = {line.split()[0]: line.split()[1] for line in spelling_dict}
 logging.info('Spelling dictionary loaded.')
 
-tpath = os.path.abspath(os.path.join(ROOT_DIR, "data"))
-os.chdir(tpath)
+os.chdir(DATA_DIR)
+
 
 class ProcessProtocols(object):
     """
@@ -30,18 +30,20 @@ class ProcessProtocols(object):
     def __init__(self, dirname, protocol_type):
         self.dirname = dirname
         self.kind = protocol_type
-        if not os.path.exists(f'{dirname}_processed'):  
+        if not os.path.exists(f'{dirname}_processed'):
             os.makedirs(f'{dirname}_processed')
+
     def process_and_save(self):
         logging.info(f'Start processing of files from folder {dirname}')
         i = 0
         files_total = len(os.listdir(self.dirname))
         logging.info(f'{files_total} files were found.')
         border = round(files_total / 10)
-        for num in range(1,files_total+1):
-            if not os.path.isfile(os.path.join(f'{self.dirname}_processed' , f'{num}_sents.txt')):
+        for num in range(1, files_total + 1):
+            if not os.path.isfile(os.path.join(f'{self.dirname}_processed', f'{num}_sents.txt')):
                 try:
-                    text = codecs.open(os.path.join(self.dirname, f'{num}_sents.txt'),'r', encoding='utf-8').readlines()
+                    text = codecs.open(os.path.join(self.dirname, f'{num}_sents.txt'), 'r',
+                                       encoding='utf-8').readlines()
                     # Steps that are applied only when kind == 'BRD' have already been applied to Reichstag protocols when extracting them from the original documents
                     if self.kind == 'BRD':
                         regex_patterns = bundestag_patterns()
@@ -65,29 +67,17 @@ class ProcessProtocols(object):
                     save_as_line_sentence(text, f'{self.dirname}_processed/{num}_sents.txt')
                     i += 1
                     if i % border == 0:
-                      logging.info('Processing {:03.1f} percent finished'.format(int((i/files_total) * 100)))
+                        logging.info('Processing {:03.1f} percent finished'.format(int((i / files_total) * 100)))
 
                 except FileNotFoundError:
                     print(f'File {num} was not found.')
 
+
 if __name__ == "__main__":
-  try:
-    dirname = sys.argv[1]
-    protocol_type = sys.argv[2]
-  except IndexError as e: 
-    print(e)
-  
-  ProcessProtocols(dirname, protocol_type).process_and_save()
+    try:
+        dirname = sys.argv[1]
+        protocol_type = sys.argv[2]
+    except IndexError as e:
+        print(e)
 
-
-
-
-
-
-
-
-
-
-
-
-
+    ProcessProtocols(dirname, protocol_type).process_and_save()

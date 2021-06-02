@@ -2,10 +2,8 @@
 import numpy as np
 import itertools
 import collections
-from gensim.models import KeyedVectors
 import glob
 import os
-import heapq
 from ReichstagEmbeddings import Embeddings
 
 # Define class for sequential embedding

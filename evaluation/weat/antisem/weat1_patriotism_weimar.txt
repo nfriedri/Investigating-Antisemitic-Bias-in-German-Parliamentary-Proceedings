@@ -1,0 +1,3 @@
+Config: 1 and patriotism and False and 12870
+Result: (0.9963697, 1.385315, 0.0)
+0.0036261025402281022
