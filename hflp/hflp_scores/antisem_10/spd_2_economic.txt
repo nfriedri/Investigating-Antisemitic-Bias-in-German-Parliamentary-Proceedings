@@ -1,0 +1,25 @@
+Mean score jewish: 0.6984161976446043
+Median score jewish: 0.7429790228202973
+Std jewish: 0.14548303494123946
+
+Mean score christian: 0.788743687361329
+Median score christian: 0.7737453910406294
+Std christian: 0.21729109845374192
+
+Mean score protestant: 0.6120591491082942
+Median score protestant: 0.6405124599132643
+Std protestant: 0.15946597205142096
+
+Mean score catholic: 0.8027530664723465
+Median score catholic: 0.8888827025656445
+Std catholic: 0.13836408270045167
+
+T-tests:
+t-test for christian and jewish:
+test statistic: 0.9658203967373897, p-value: 0.34767377330496785
+t-test for protestant and catholic:
+test statistic: -1.8959831782543688, p-value: 0.09046716422896699
+t-test for protestant and jewish:
+test statistic: -0.9763044716408937, p-value: 0.3481852378952295
+t-test for catholic and jewish:
+test statistic: 1.1790498251067023, p-value: 0.26325229669880157
