@@ -1,4 +1,4 @@
-for slice in kaiserreich_1_processed kaiserreich_2_processed weimar_processed; do \
+for slice in kaiserreich_1 kaiserreich_2 weimar; do \
   python ect_and_bat.py \
     --test_type ECT \
     --protocol_type RT \

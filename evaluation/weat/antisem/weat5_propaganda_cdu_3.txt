@@ -1,3 +1,0 @@
-Config: 5 and propaganda and False and 12870
-Result: (2.8621929, 1.336189, 0.0)
-0.006018602384461297

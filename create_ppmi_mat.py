@@ -1,3 +1,5 @@
+import environment as env
+
 from collections import Counter
 import numpy as np
 import os
@@ -11,7 +13,7 @@ import itertools
 from utils import create_attribute_sets, create_target_sets, CreateCorpus
 from nltk.corpus import stopwords
 
-import environment as env
+
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s :: %(levelname)s :: %(message)s')
 
@@ -240,7 +242,7 @@ def main():
             f.write(json.dumps(tok2indx))
     if env.AREA == "anticom":
         if not os.path.exists(env.PPMI_ANTICOM_DIR):
-            os.makedirs(env.PPMI_ANTISEM_DIR)
+            os.makedirs(env.PPMI_ANTICOM_DIR)
         sparse.save_npz(f'{env.PPMI_ANTICOM_DIR}/ppmi_{args.output_file}.npz', ppmi_mat, compressed=True)
         sparse.save_npz(f'{env.PPMI_ANTICOM_DIR}/sppmi_{args.output_file}.npz', sppmi_mat, compressed=True)
         with codecs.open(f'{env.PPMI_ANTICOM_DIR}/{args.output_file}.json', "w", encoding='utf-8') as f:

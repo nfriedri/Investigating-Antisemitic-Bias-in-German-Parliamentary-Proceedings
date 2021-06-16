@@ -1,4 +1,4 @@
-for slice in kaiserreich_1 kaiserreich_2 ns weimar; do \
+for slice in kaiserreich_1 kaiserreich_2 weimar ns; do \
   for dom in sentiment patriotic economic conspiratorial religious racist ethic; do \
     python propagate.py \
 	    --ppmi ppmi_${slice}.npz \

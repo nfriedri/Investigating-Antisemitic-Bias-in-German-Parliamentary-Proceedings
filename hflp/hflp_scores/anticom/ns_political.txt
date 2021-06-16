@@ -1,0 +1,11 @@
+Mean score conservatism: 0.559265091300697
+Median score conservatism: 0.4822680788373228
+Std conservatism: 0.2606194113263477
+
+Mean score communism: 0.6050098758569031
+Median score communism: 0.5965694657447266
+Std communism: 0.1826159687947688
+
+T-tests:
+t-test for conservatism and communism:
+test statistic: -0.5567298630988915, p-value: 0.5818417793083628

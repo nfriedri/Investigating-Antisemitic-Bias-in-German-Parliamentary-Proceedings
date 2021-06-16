@@ -1,0 +1,3 @@
+Config: 5 and sentiment and False and 12870
+Result: (1.1878526, 1.2066013, 0.0)
+0.005398811366822984

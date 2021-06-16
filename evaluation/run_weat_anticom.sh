@@ -1,4 +1,4 @@
-for slice in kaiserreich_1_processed kaiserreich_2_processed weimar_processed; do \
+for slice in kaiserreich_1 kaiserreich_2 weimar; do \
     for att in sentiment political propaganda; \
       do python weat.py \
           --test_number 5 \

@@ -248,66 +248,6 @@ class XWEAT(object):
         return self.weat_stats_precomputed_sims(T1, T2, A1, A2, sample_p)
 
 
-def execute_weat(test_number, protocol_type, sem_domain, permutation_number, output_file, lower, embedding_vocab,
-                 embedding_vectors, is_vec_format):
-    def boolean_string(s):
-        if s not in {'False', 'True', 'false', 'true'}:
-            raise ValueError('Not a valid boolean string')
-        return s == 'True' or s == 'true'
-
-    # parser.add_argument("--test_number", type=int, help="Number of the weat test to run", required=False)
-    # parser.add_argument("--protocol_type", nargs='?', choices = ['RT', 'BRD'], help="Whether to run test for Reichstagsprotokolle (RT) or Bundestagsprotokolle (BRD)",required=True)
-    # parser.add_argument("--sem_domain", nargs='?', choices= ['sentiment', 'patriotism', 'economic', 'conspiratorial', 'racist', 'religious', 'ethic'], help='Which semantic domain to test in WEAT', required=True)
-    # parser.add_argument("--permutation_number", type=int, default=None, help="Number of permutations (otherwise all will be run)", required=False)
-    # parser.add_argument("--output_file", type=str, default=None, help="File to store the results)", required=False)
-    # parser.add_argument("--lower", type=boolean_string, default=False, help="Whether to lower the vocab", required=True)
-    # parser.add_argument("--embedding_vocab", type=str, help="Vocab of the embeddings")
-    # parser.add_argument("--embedding_vectors", type=str, help="Vectors of the embeddings")
-    # parser.add_argument("--is_vec_format", type=boolean_string, default=False, help="Whether embeddings are in vec format")
-    # parser.add_argument("--similarity_type", type=str, default='cosine', help="Similarity type to use")
-    # parser.add_argument("--embeddings", type=str, help="Vectors and vocab of the embeddings")
-    # args = parser.parse_args()
-
-    start = time.time()
-    logging.basicConfig(level=logging.INFO)
-    logging.info("XWEAT started")
-    weat = XWEAT()
-
-    if test_number == 1:
-        targets_1, targets_2, attributes_1, attributes_2 = weat.weat_1(sem_domain, protocol_type)
-    if lower:
-        targets_1 = [t.lower() for t in targets_1]
-        targets_2 = [t.lower() for t in targets_2]
-        attributes_1 = [a.lower() for a in attributes_1]
-        attributes_2 = [a.lower() for a in attributes_2]
-
-    if is_vec_format:
-        logging.info("Embeddings are in vec format")
-        # embd_dict = load_embeddings(embeddings)
-    else:
-        embd_dict = load_embedding_dict(vocab_path=embedding_vocab, vector_path=embedding_vectors, glove=False)
-    weat.set_embd_dict(embd_dict)
-
-    logging.info("Running test")
-    result = weat.run_test_precomputed_sims(targets_1, targets_2, attributes_1, attributes_2, permutation_number)
-    logging.info(result)
-    ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
-    output_path = str(ROOT_DIR) +'/' + output_file
-    with open(output_path, "w+", encoding="utf8") as f:
-        f.write("Config: ")
-        f.write(str(test_number) + " and ")
-        f.write(str(sem_domain) + " and ")
-        f.write(str(lower) + " and ")
-        f.write(str(permutation_number) + "\n")
-        f.write("Result: ")
-        f.write(str(result))
-        f.write("\n")
-        end = time.time()
-        duration_in_hours = ((end - start) / 60) / 60
-        f.write(str(duration_in_hours))
-        f.close()
-
-
 def main():
     def boolean_string(s):
         if s not in {'False', 'True', 'false', 'true'}:

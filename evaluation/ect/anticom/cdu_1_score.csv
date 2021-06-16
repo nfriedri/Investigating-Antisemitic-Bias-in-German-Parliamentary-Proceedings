@@ -1,3 +1,3 @@
-,sentiment,sentiment,patriotism,patriotism,economic,economic,conspiratorial,conspiratorial,religious,religious,racist,racist,ethic,ethic,political,political,propaganda,propaganda
-,corr,p,corr,p,corr,p,corr,p,corr,p,corr,p,corr,p,corr,p,corr,p
-weat_5,0.7137022397891963,3.728175258630757e-08,,,,,,,,,,,,,0.5805515239477503,6.433893691081483e-06,0.7393695014662756,1.338174467550655e-06
+,sentiment,sentiment,political,political,propaganda,propaganda
+,corr,p,corr,p,corr,p
+weat_5,0.7206282090003019,5.065267747276169e-08,0.632801161103048,4.82104328115508e-07,0.6879032258064517,1.899941433989235e-05

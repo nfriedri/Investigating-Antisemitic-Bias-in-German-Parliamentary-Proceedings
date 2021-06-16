@@ -1,3 +1,7 @@
+import sys
+sys.path.append('./..')
+import environment as env
+import utils
 
 import os
 import codecs
@@ -11,12 +15,11 @@ import argparse
 from pathlib import Path
 from eval import embedding_coherence_test, bias_analogy_test
 from weat import XWEAT
-import environment as env
 
-import sys
 
-sys.path.append('./..')
-import utils
+
+
+
 # from bias_specifications import antisemitic_streams
 
 # ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -104,7 +107,7 @@ def ect_bat(test_type, protocol_type, output_file, vocab_file, vector_file):
                     res_df.loc[k1, (k2, 'p')] = results[k1][k2].pvalue
             res_df.to_csv(f'{env.ECT_OUTPUTS}/antisem/{output_file}.csv', index=True, header=True)
         if env.AREA == "anticom":
-            res_df = pd.DataFrame(index=pd.MultiIndex.from_product([DIMENSIONS_antisem, ['corr', 'p']]),
+            res_df = pd.DataFrame(index=pd.MultiIndex.from_product([DIMENSIONS_anticom, ['corr', 'p']]),
                                   columns=results.keys()).T
             for k1, v1 in results.items():
                 for k2, v2 in v1.items():
@@ -134,36 +137,6 @@ def main():
         env.set_area(args.area)
 
     ect_bat(args.test_type, args.protocol_type, args.output_file, args.vocab_file, args.vector_file)
-    """
-    vocab = load_vocab(str(vocab_path / args.vocab_file))
-    vectors = load_vectors(str(models_path / args.vector_file))
-    results = {}
-    for test in weat_tests:
-        results[test.__name__] = {}
-        for dim in DIMENSIONS:
-            weat_terms = test(dim, args.protocol_type)
-            if args.test_type == 'BAT':
-                result = run_bat(vectors, vocab, weat_terms)
-                logging.info(f'{test.__name__} - {dim}: {result}')
-                results[test.__name__][dim] = result
-            elif args.test_type == 'ECT':
-                result = run_ect(vectors, vocab, weat_terms)
-                logging.info(f'{test.__name__} - {dim}: {result}')
-                results[test.__name__][dim] = result
-
-    if args.test_type == 'BAT':
-        res_df = pd.DataFrame(results).T.round(3)
-
-    elif args.test_type == 'ECT':
-        res_df = pd.DataFrame(index=pd.MultiIndex.from_product([DIMENSIONS, ['corr', 'p']]),
-                              columns=results.keys()).T
-        for k1, v1 in results.items():
-            for k2, v2 in v1.items():
-                res_df.loc[k1, (k2, 'corr')] = results[k1][k2].correlation
-                res_df.loc[k1, (k2, 'p')] = results[k1][k2].pvalue
-
-    res_df.to_csv(f'{str(ROOT_DIR)}/{args.output_file}.csv', index=True, header=True)
-    """
 
 
 if __name__ == "__main__":

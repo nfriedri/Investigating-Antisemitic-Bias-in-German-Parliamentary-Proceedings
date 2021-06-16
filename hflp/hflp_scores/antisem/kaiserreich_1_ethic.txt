@@ -1,25 +1,25 @@
-Mean score jewish: 0.4971394928980198
-Median score jewish: 0.5145509626238217
-Std jewish: 0.11838184491036496
+Mean score jewish: 0.49541514587502256
+Median score jewish: 0.5040212909550214
+Std jewish: 0.11679230629174231
 
-Mean score christian: 0.4777985426209525
-Median score christian: 0.49048884909487755
-Std christian: 0.10306607464769915
+Mean score christian: 0.46955340378700655
+Median score christian: 0.47994371077379555
+Std christian: 0.09761283989831321
 
-Mean score protestant: 0.4819864884210309
-Median score protestant: 0.5140726878955004
-Std protestant: 0.0744599600079456
+Mean score protestant: 0.4763794386804265
+Median score protestant: 0.5025104385426837
+Std protestant: 0.06966833967406852
 
-Mean score catholic: 0.4979491197978988
-Median score catholic: 0.4831081718762635
-Std catholic: 0.05207755750599999
+Mean score catholic: 0.4887962072406934
+Median score catholic: 0.4965295171249366
+Std catholic: 0.05680829532823236
 
 T-tests:
 t-test for christian and jewish:
-test statistic: -0.39947358956528545, p-value: 0.6935780171664958
+test statistic: -0.5522828363928575, p-value: 0.5865851844386667
 t-test for protestant and catholic:
-test statistic: -0.5270253324323813, p-value: 0.6046112474029675
+test statistic: -0.4143821604926577, p-value: 0.6834906232689683
 t-test for protestant and jewish:
-test statistic: -0.32505115528963535, p-value: 0.7488900000018528
+test statistic: -0.4199266436248181, p-value: 0.6795088486822008
 t-test for catholic and jewish:
-test statistic: 0.01878044211621178, p-value: 0.985222868097914
+test statistic: -0.15289125228346986, p-value: 0.8801848987842911

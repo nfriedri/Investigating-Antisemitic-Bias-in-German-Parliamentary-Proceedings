@@ -1,4 +1,4 @@
-for slice in kaiserreich_1_processed kaiserreich_2_processed weimar_processed; do \
+for slice in kaiserreich_1 kaiserreich_2 weimar; do \
 python simlex_test.py \
 	--vocab_file_pattern ${slice}.json \
 	--vector_file_pattern ${slice}.vectors.npy \

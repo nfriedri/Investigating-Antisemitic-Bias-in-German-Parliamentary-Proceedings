@@ -1,3 +1,5 @@
+import environment as env
+
 from utils import create_target_sets, create_attribute_sets, inverse, convert_attribute_set
 from scipy import sparse, stats
 import os
@@ -7,7 +9,7 @@ import argparse
 import logging
 import time
 import json
-import environment as env
+
 
 logging.basicConfig(level=logging.INFO)
 
